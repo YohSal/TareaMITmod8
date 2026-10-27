@@ -145,7 +145,7 @@
         </div>
     </header>
 
-    <!-- NAVEGACIÓN PRINCIPAL ENTRE PESTAÑAS -->
+    <!-- NAVEGACIÓN PRINCIPAL ENTRE PESTAÑAS CON 4 AGENTES + DASHBOARD -->
     <nav class="bg-white border-b border-slate-200 px-6 no-print">
         <div class="max-w-7xl mx-auto flex items-center justify-start md:justify-center gap-2 overflow-x-auto custom-scrollbar py-2">
             <button onclick="switchTab('contratos')" id="tab-contratos" class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
@@ -161,6 +161,11 @@
             <button onclick="switchTab('trabajador')" id="tab-trabajador" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
                 <i data-lucide="cpu" class="w-4 h-4 text-indigo-600"></i>
                 <span>Agente 3: Trabajador</span>
+            </button>
+
+            <button onclick="switchTab('supervisor')" id="tab-supervisor" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
+                <i data-lucide="eye" class="w-4 h-4 text-emerald-600"></i>
+                <span>Agente 4: Supervisor</span>
             </button>
 
             <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
@@ -523,7 +528,119 @@
         </div>
 
         <!-- =================================================================== -->
-        <!-- PESTAÑA 4: DASHBOARD EJECUTIVO                                     -->
+        <!-- PESTAÑA 4: AGENTE 4 "SUPERVISOR" (CONTROL TRANSVERSAL ADVERSARIO)   -->
+        <!-- =================================================================== -->
+        <div id="view-supervisor" class="hidden space-y-6 no-print">
+            <!-- Header -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 border-l-4 border-l-emerald-600">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200">
+                    <i data-lucide="eye" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-yoh-navy">Agente 4: Supervisor (Agente Adversario)</h2>
+                    <p class="text-xs text-slate-500">
+                        Auditoría continua y transversal de todas las fases. Verifica coherencia, detecta alucinaciones e inconsistencias y activa HITL de forma prioritaria.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Status Banner & Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Estado del Agente Adversario</span>
+                    <span class="text-lg font-black text-emerald-600 flex items-center gap-1.5 mt-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        ACTIVO (24/7)
+                    </span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Coherencia Transversal</span>
+                    <span id="sup-metric-coherence" class="text-xl font-black text-yoh-navy mt-1 block">99.8%</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Deriva de Modelo (Drift)</span>
+                    <span id="sup-metric-drift" class="text-xl font-black text-emerald-600 mt-1 block">0.02% (Bajo)</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Intervenciones HITL Forzadas</span>
+                    <span id="sup-metric-interventions" class="text-xl font-black text-yoh-orange mt-1 block">1 Activa</span>
+                </div>
+            </div>
+
+            <!-- Adversarial Test Interactive Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Simulador de Pruebas Adversarias</span>
+                    </h3>
+
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Somete el flujo de los Agentes 1, 2 y 3 a escenarios de estrés para verificar que el <strong>Agente Supervisor</strong> intercepte alucinaciones, contradicciones o vulnerabilidades de compliance.
+                    </p>
+
+                    <div class="space-y-2.5 pt-2">
+                        <button onclick="runAdversarialTest('inconsistency')" class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs transition-all flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-yoh-navy">Prueba 1: Inconsistencia en SLA y Descuento</div>
+                                <div class="text-[11px] text-slate-500">Simula contradicción entre cláusula 2da y contraprestación.</div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                        </button>
+
+                        <button onclick="runAdversarialTest('law81')" class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs transition-all flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-yoh-navy">Prueba 2: Omisión de Consentimiento Ley 81</div>
+                                <div class="text-[11px] text-slate-500">Simula borrador sin cláusula explícita de anonimización ARCO.</div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                        </button>
+
+                        <button onclick="runAdversarialTest('drift')" class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs transition-all flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-yoh-navy">Prueba 3: Test de Deriva de Modelo (Drift Test)</div>
+                                <div class="text-[11px] text-slate-500">Evalúa consistencia sintáctica y legal acumulada.</div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adversarial Real-Time Logs -->
+                <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="terminal" class="w-4 h-4 text-yoh-blue"></i>
+                                <span>Logs de Auditoría Transversal en Tiempo Real</span>
+                            </h3>
+                            <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">XAI / RAG Monitor</span>
+                        </div>
+
+                        <div id="sup-log-container" class="bg-slate-900 text-emerald-400 font-mono text-[11px] p-4 rounded-xl max-h-[300px] overflow-y-auto space-y-2 leading-relaxed border border-slate-800">
+                            <div>[SYSTEM - AGENTE 4 SUPERVISOR]: Inicializado en modo adversario continuo sobre red VPC Banco YOH.</div>
+                            <div>[MONITOR]: Verificando coherencia entre Agente 1 (Borradores) y Agente 2 (Normativo SBP/Ley 81)...</div>
+                            <div class="text-emerald-300">[OK]: CTR-2026-089 verificado sin inconsistencias semánticas. Coherencia 100%.</div>
+                            <div class="text-amber-400">[WARN]: CTR-2026-042 detectó restricción parcial en auditoría SBP. HITL activado automáticamente.</div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
+                        <span class="text-xs text-slate-500 font-medium">Gobernanza Transversal • Estrategia "Gatear, Caminar, Correr"</span>
+                        <button onclick="openHitlModalFor('CTR-2026-042')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                            <span>Ver Intervención HITL</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PESTAÑA 5: DASHBOARD EJECUTIVO                                     -->
         <!-- =================================================================== -->
         <div id="view-dashboard" class="hidden space-y-6 no-print">
             <!-- Banner -->
@@ -585,12 +702,12 @@
                     </div>
                     <div class="mt-3">
                         <div class="text-2xl font-black text-emerald-600">0.0% (Cero)</div>
-                        <div class="text-xs text-slate-500 font-medium mt-1">Gobernanza XAI y RAG</div>
+                        <div class="text-xs text-slate-500 font-medium mt-1">Gobernanza XAI, RAG & Agente 4</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Middle Row: HITL Queue & Agent Status -->
+            <!-- Middle Row: HITL Queue & Agent System Status -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <!-- Pending HITL Queue -->
                 <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
@@ -609,7 +726,7 @@
                     </div>
                 </div>
 
-                <!-- Agent System Status -->
+                <!-- Agent System Status (All 4 Agents) -->
                 <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
                     <h3 class="text-sm font-bold text-yoh-navy pb-3 border-b border-slate-200 flex items-center gap-2">
                         <i data-lucide="activity" class="w-4 h-4 text-yoh-blue"></i>
@@ -654,6 +771,19 @@
                                 </div>
                             </div>
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">ACTIVO</span>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-yoh-navy">Agente 4: Supervisor</div>
+                                    <div class="text-slate-500 text-[11px]">Control Adversario Transversal</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">ACTIVO (TRANSVERSAL)</span>
                         </div>
                     </div>
                 </div>
@@ -759,6 +889,7 @@
             document.getElementById('view-contratos').classList.add('hidden');
             document.getElementById('view-analitico').classList.add('hidden');
             document.getElementById('view-trabajador').classList.add('hidden');
+            document.getElementById('view-supervisor').classList.add('hidden');
             document.getElementById('view-dashboard').classList.add('hidden');
 
             document.getElementById(`view-${tabId}`).classList.remove('hidden');
@@ -806,7 +937,7 @@
                 </div>
 
                 <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
-                    <strong style="font-weight: bold; color: #0F172A;">QUINTA: Cumplimiento Regulatorio y Protección de Datos.</strong> Las partes convienen que el tratamiento de la información se sujetará estrictamente a la <strong>Ley 81 de 2019</strong> de Panamá sobre Protección de Datos Personales, aplicando técnicas de anonimización y respeto a los derechos ARCO, así como las directrices AML de la <strong>Ley 23 de 2015</strong>.
+                    <strong style="font-weight: bold; color: #0F172A;">QUINTA: Cumplimiento Regulatorio y Protección de Datos.</strong> Las partes convienen que el tratamiento de la información se sujetará strictly a la <strong>Ley 81 de 2019</strong> de Panamá sobre Protección de Datos Personales, aplicando técnicas de anonimización y respeto a los derechos ARCO, así como las directrices AML de la <strong>Ley 23 de 2015</strong>.
                 </div>
 
                 <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
@@ -1210,6 +1341,36 @@
             showToast(`Búsqueda en Vector DB: ${filtered.length} resultados`, 'info');
         }
 
+        // AGENTE 4: SUPERVISOR ADVERSARIAL SIMULATION LOGIC
+        function runAdversarialTest(type) {
+            const logContainer = document.getElementById('sup-log-container');
+            const timestamp = new Date().toLocaleTimeString('es-ES');
+
+            if (type === 'inconsistency') {
+                logContainer.innerHTML += `
+                    <div class="text-rose-400 mt-1">[${timestamp}] [ADVERSARIAL TEST]: Simulando contradicción entre SLA e incentivo por pronto pago...</div>
+                    <div class="text-amber-300">[SUPERVISOR DETECT]: Detectada incongruencia en Cláusula 2da vs 4ta. Coherencia cae a 84.2%.</div>
+                    <div class="text-rose-400 font-bold">[ACTION REQUIRED]: Disparando revisión HITL obligatoria antes de autorizar firma digital.</div>
+                `;
+                showToast('Agente 4 interceptó inconsistencia contractual', 'warning');
+            } else if (type === 'law81') {
+                logContainer.innerHTML += `
+                    <div class="text-rose-400 mt-1">[${timestamp}] [ADVERSARIAL TEST]: Escaneando omisión de derechos ARCO Ley 81...</div>
+                    <div class="text-amber-300">[SUPERVISOR DETECT]: Alerta de alucinación o vacante normativa en Cláusula Quinta.</div>
+                    <div class="text-emerald-300">[RESOLVED]: Aplicado parche dinámico RAG. Bloqueada exportación sin consentimiento expreso.</div>
+                `;
+                showToast('Agente 4 validó y corrigió omisión de Ley 81', 'success');
+            } else if (type === 'drift') {
+                logContainer.innerHTML += `
+                    <div class="text-emerald-400 mt-1">[${timestamp}] [DRIFT TEST]: Ejecutando prueba de deriva sintáctica sobre 24 cláusulas...</div>
+                    <div class="text-emerald-300">[SUPERVISOR RESULT]: Deriva de modelo = 0.018%. Modelo estable dentro de umbrales seguros.</div>
+                `;
+                showToast('Prueba de Deriva completada: Modelo Estable', 'info');
+            }
+
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
         // HITL MODAL LOGIC
         function openHitlModalFor(id) {
             const item = contractsStore.find(c => c.id === id);
@@ -1238,9 +1399,9 @@
                 </div>
 
                 <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
-                    <span class="font-bold text-rose-800 block">Informe del Agente Analítico:</span>
+                    <span class="font-bold text-rose-800 block">Informe del Agente Analítico y Supervisor:</span>
                     <p class="text-rose-700 text-[11px]">
-                        El riesgo excede el umbral del 20%. Se detectó restricción parcial de acceso a auditores SBP y posible transferencia de datos sin anonimización previa.
+                        El riesgo excede el umbral del 20%. Se detectó restricción parcial de acceso a auditores SBP y posible transferencia de datos sin anonimización previa. Interceptado por Agente 4 (Supervisor).
                     </p>
                 </div>
 

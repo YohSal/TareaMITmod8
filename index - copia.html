@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banco YOH - Portal de Gestión de Contratos</title>
+    <!-- Tailwind CSS for utility styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- html2pdf.js for direct PDF file generation & download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Custom Theme Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        yoh: {
+                            navy: '#0F172A',
+                            blue: '#1E3A8A',
+                            lightBlue: '#3B82F6',
+                            orange: '#F97316',
+                            orangeHover: '#EA580C',
+                            bg: '#F8FAFC',
+                            card: '#FFFFFF',
+                            border: '#E2E8F0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+        .tab-btn.active {
+            background-color: #1E3A8A;
+            color: #FFFFFF;
+            border-bottom: 3px solid #F97316;
+        }
+        .tab-btn.active svg {
+            color: #F97316;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+
+        /* PRINT STYLING FOR BROWSER PRINT FALLBACK */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-contract-area, #printable-contract-area * {
+                visibility: visible;
+            }
+            #printable-contract-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20mm;
+                font-family: 'Times New Roman', Times, serif;
+                font-size: 11pt;
+                line-height: 1.6;
+                color: #000000;
+                background: #ffffff;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
+
+    <!-- MODAL HITL CONTAINER -->
+    <div id="hitl-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border-2 border-yoh-orange/40 space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                <div class="flex items-center gap-2 text-yoh-navy font-bold text-lg">
+                    <i data-lucide="user-check" class="w-6 h-6 text-yoh-orange"></i>
+                    <span>Evaluación Humana Prioritaria (HITL)</span>
+                </div>
+                <button onclick="closeHitlModal()" class="text-slate-400 hover:text-slate-700 font-bold">✕</button>
+            </div>
+
+            <div id="hitl-modal-body" class="space-y-4 text-xs text-slate-600">
+                <!-- Dynamic Content -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button onclick="rejectHitl()" class="px-4 py-2 bg-rose-50 border border-rose-200 text-rose-700 font-bold rounded-xl hover:bg-rose-100 transition-all">
+                    Rechazar y Devolver
+                </button>
+                <button onclick="approveHitl()" class="px-5 py-2 bg-yoh-blue hover:bg-yoh-navy text-white font-bold rounded-xl shadow-md transition-all">
+                    Aprobar Excepción
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER DE BANCO YOH -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-yoh-navy flex items-center justify-center text-white border-2 border-yoh-orange shadow-md">
+                    <span class="text-xl font-black tracking-wider text-yoh-orange">YOH</span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-xl font-bold text-yoh-navy">Portal de Gestión de Contratos</h1>
+                        <span class="text-xs bg-slate-100 text-yoh-navy font-semibold px-2.5 py-0.5 rounded-full border border-slate-200">
+                            Banco YOH
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-0.5 font-medium">
+                        Departamento de Administración de Contratos
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-xs text-slate-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="font-medium">Red Nube Privada (VPC)</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVEGACIÓN PRINCIPAL ENTRE PESTAÑAS CON 4 AGENTES + DASHBOARD -->
+    <nav class="bg-white border-b border-slate-200 px-6 no-print">
+        <div class="max-w-7xl mx-auto flex items-center justify-start md:justify-center gap-2 overflow-x-auto custom-scrollbar py-2">
+            <button onclick="switchTab('contratos')" id="tab-contratos" class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
+                <i data-lucide="file-text" class="w-4 h-4 text-yoh-blue"></i>
+                <span>Agente 1: Contratos</span>
+            </button>
+
+            <button onclick="switchTab('analitico')" id="tab-analitico" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
+                <i data-lucide="shield-alert" class="w-4 h-4 text-yoh-orange"></i>
+                <span>Agente 2: Analítico</span>
+            </button>
+
+            <button onclick="switchTab('trabajador')" id="tab-trabajador" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
+                <i data-lucide="cpu" class="w-4 h-4 text-indigo-600"></i>
+                <span>Agente 3: Trabajador</span>
+            </button>
+
+            <button onclick="switchTab('supervisor')" id="tab-supervisor" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
+                <i data-lucide="eye" class="w-4 h-4 text-emerald-600"></i>
+                <span>Agente 4: Supervisor</span>
+            </button>
+
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-yoh-blue transition-all whitespace-nowrap">
+                <i data-lucide="layout-dashboard" class="w-4 h-4 text-slate-600"></i>
+                <span>Dashboard Ejecutivo</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- CONTAINER DE CONTENIDO PRINCIPAL -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- =================================================================== -->
+        <!-- PESTAÑA 1: AGENTE 1 "CONTRATOS" (INGESTA Y BORRADOR)                -->
+        <!-- =================================================================== -->
+        <div id="view-contratos" class="space-y-6">
+            <!-- Header -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 border-l-4 border-l-yoh-blue no-print">
+                <div class="p-3 bg-blue-50 text-yoh-blue rounded-xl border border-blue-200">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-yoh-navy">Agente 1: Contratos</h2>
+                    <p class="text-xs text-slate-500">
+                        Captura datos de solicitud y autogenera el borrador del acuerdo estandarizado con validez legal.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Form Ingestion -->
+                <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 no-print">
+                    <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-4 h-4 text-yoh-orange"></i>
+                        <span>Datos de Contratación</span>
+                    </h3>
+
+                    <form id="form-generar-contrato" onsubmit="handleGenerateDraft(event)" class="space-y-3.5 text-xs">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Proveedor / Razón Social</label>
+                            <input type="text" id="input-provider" value="Servicios Cloud Panamá S.A." required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">RUC / D.V. Proveedor</label>
+                                <input type="text" id="input-ruc" value="155698234-2-2018 DV 45" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Representante Legal</label>
+                                <input type="text" id="input-rep" value="Jacinto Pico Cuy" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Monto del Contrato (USD)</label>
+                                <input type="number" id="input-amount" value="55000" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Cédula Rep. Legal</label>
+                                <input type="text" id="input-cedula" value="E-8-125489" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Tipo de Servicio / Objeto</label>
+                            <select id="input-service" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                                <option value="Tecnología e Infraestructura Cloud">Tecnología e Infraestructura Cloud</option>
+                                <option value="Auditoría de Ciberseguridad & Pentesting">Auditoría de Ciberseguridad & Pentesting</option>
+                                <option value="Suministro de Equipos de Computación & Mantenimiento">Suministro de Equipos de Computación & Mantenimiento</option>
+                                <option value="Consultoría Jurídica Especializada">Consultoría Jurídica Especializada</option>
+                                <option value="Servicios Administrativos Generales">Servicios Administrativos Generales</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">Plazo (Meses)</label>
+                                <input type="number" id="input-term" value="12" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-slate-700 mb-1">SLA Garantizado (%)</label>
+                                <input type="text" id="input-sla" value="99.9%" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:border-yoh-blue">
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btn-generate" class="w-full py-2.5 bg-yoh-blue hover:bg-yoh-navy text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-yoh-orange"></i>
+                            <span>Autogenerar Borrador</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Contract Preview & Print Container -->
+                <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-3 no-print">
+                            <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="file-check" class="w-4 h-4 text-yoh-blue"></i>
+                                <span>Vista Previa del Borrador Legal</span>
+                            </h3>
+                            
+                            <!-- ACTION BUTTONS: COPY & DOWNLOAD PDF -->
+                            <div class="flex items-center gap-2">
+                                <button onclick="copyDraftText()" class="px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold flex items-center gap-1.5 transition-all">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5 text-slate-600"></i>
+                                    <span>Copiar</span>
+                                </button>
+                                <button onclick="downloadContractPDF()" id="btn-print-pdf" class="px-3 py-1.5 text-xs bg-yoh-blue hover:bg-yoh-navy text-white rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition-all">
+                                    <i data-lucide="download" class="w-3.5 h-3.5 text-yoh-orange"></i>
+                                    <span>Imprimir / PDF</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PRINTABLE CONTRACT CONTAINER WITH RICH HTML STYLING -->
+                        <div id="printable-contract-area" class="bg-slate-50 border border-slate-200 rounded-xl p-6 font-serif text-xs text-slate-900 leading-relaxed max-h-[480px] overflow-y-auto shadow-inner space-y-4">
+                            <div class="text-center font-sans font-bold text-slate-400 py-12">
+                                Completa el formulario de la izquierda y haz clic en "Autogenerar Borrador".
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-200 flex items-center justify-between no-print">
+                        <span class="text-xs text-slate-500 font-medium">Plantilla Institucional Oficial de Banco YOH</span>
+                        <button onclick="sendToAnalitico()" id="btn-transfer-analitico" disabled class="px-4 py-2 bg-yoh-orange hover:bg-yoh-orangeHover text-white font-bold rounded-xl text-xs opacity-50 cursor-not-allowed shadow-md transition-all flex items-center gap-2">
+                            <span>Enviar a Agente Analítico</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PESTAÑA 2: AGENTE 2 "ANALÍTICO" (ANÁLISIS DE RIESGO Y HITL)          -->
+        <!-- =================================================================== -->
+        <div id="view-analitico" class="hidden space-y-6 no-print">
+            <!-- Header -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 border-l-4 border-l-yoh-orange">
+                <div class="p-3 bg-orange-50 text-yoh-orange rounded-xl border border-orange-200">
+                    <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-yoh-navy">Agente 2: Analítico</h2>
+                    <p class="text-xs text-slate-500">
+                        Evaluación automatizada de riesgos, políticas internas y cumplimiento normativo de la banca panameña.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Contract Select -->
+                <div class="lg:col-span-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider">Contratos en Proceso</h3>
+                    <div id="analitico-contract-list" class="space-y-2 max-h-[380px] overflow-y-auto">
+                        <!-- Dynamic list -->
+                    </div>
+
+                    <button onclick="runAuditSimulation()" id="btn-run-audit" class="w-full py-2.5 bg-yoh-orange hover:bg-yoh-orangeHover text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="shield-search" class="w-4 h-4"></i>
+                        <span>Ejecutar Análisis de Riesgo</span>
+                    </button>
+                </div>
+
+                <!-- Audit Results -->
+                <div class="lg:col-span-8 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                    <!-- Progress Bar -->
+                    <div id="audit-progress-container" class="hidden space-y-2">
+                        <div class="flex justify-between text-xs font-bold text-yoh-navy">
+                            <span>Escaneando cláusulas y normativas SBP / Ley 81...</span>
+                            <span id="audit-progress-text">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden border border-slate-200">
+                            <div id="audit-progress-bar" class="bg-yoh-orange h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Metric Cards -->
+                    <div id="audit-metrics-grid" class="grid grid-cols-3 gap-3">
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <span class="text-[11px] text-slate-500 block font-medium">Risk Score</span>
+                            <span id="metric-risk-score" class="text-xl font-black text-yoh-navy">-- %</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <span class="text-[11px] text-slate-500 block font-medium">Cláusulas Analizadas</span>
+                            <span id="metric-clauses" class="text-xl font-black text-yoh-navy">--</span>
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <span class="text-[11px] text-slate-500 block font-medium">Observaciones</span>
+                            <span id="metric-issues" class="text-xl font-black text-yoh-orange">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Regulatory Compliance Matrix -->
+                    <div class="space-y-2">
+                        <h4 class="text-xs font-bold text-yoh-navy uppercase">Matriz de Cumplimiento Regulatorio (Panamá):</h4>
+                        
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-bold text-yoh-navy">Protección de Datos Personales (Ley 81 de 2019)</div>
+                                <div class="text-[11px] text-slate-500">Anonimización y consentimiento explícito ARCO</div>
+                            </div>
+                            <span id="badge-law81" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">PENDIENTE</span>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-bold text-yoh-navy">Riesgo Tecnológico (Acuerdo SBP 008-2010)</div>
+                                <div class="text-[11px] text-slate-500">Continuidad, disponibilidad e inspección bancaria</div>
+                            </div>
+                            <span id="badge-sbp008" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">PENDIENTE</span>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                                <div class="text-xs font-bold text-yoh-navy">Prevención de Blanqueo (Ley 23 de 2015 AML/CFT)</div>
+                                <div class="text-[11px] text-slate-500">Trazabilidad, listas restrictivas y debida diligencia</div>
+                            </div>
+                            <span id="badge-law23" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">PENDIENTE</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Action -->
+                    <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
+                        <span id="audit-recommendation-text" class="text-xs text-slate-500 font-medium">Selecciona un contrato e inicia el escaneo.</span>
+                        <button onclick="triggerHitlFromAnalitico()" id="btn-hitl-trigger" class="hidden px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+                            <span>Escalar a Revisión Humana (HITL)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PESTAÑA 3: AGENTE 3 "TRABAJADOR" (FIRMA Y CUSTODIA)                 -->
+        <!-- =================================================================== -->
+        <div id="view-trabajador" class="hidden space-y-6 no-print">
+            <!-- Header -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 border-l-4 border-l-indigo-600">
+                <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-200">
+                    <i data-lucide="cpu" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-yoh-navy">Agente 3: Trabajador</h2>
+                    <p class="text-xs text-slate-500">
+                        Firma digital, inclusión en la carpeta digital del cliente, archivo vectorial DB y alertas predictivas.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Execution Actions Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-yoh-navy">Firma Digital Avanzada</div>
+                        <div class="text-[11px] text-slate-500">Sellado de tiempo gubernamental</div>
+                    </div>
+                    <button onclick="simulateDigitalSignature()" class="px-3 py-1.5 bg-yoh-blue hover:bg-yoh-navy text-white text-xs font-bold rounded-lg transition-all">
+                        Firmar
+                    </button>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-yoh-navy">Carpeta Digital del Cliente</div>
+                        <div class="text-[11px] text-slate-500">Inclusión en expediente único</div>
+                    </div>
+                    <button onclick="simulateCustomerFolder()" class="px-3 py-1.5 bg-yoh-blue hover:bg-yoh-navy text-white text-xs font-bold rounded-lg transition-all">
+                        Archivar
+                    </button>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <div class="text-xs font-bold text-yoh-navy">Indexación Vector DB</div>
+                        <div class="text-[11px] text-slate-500">Búsqueda semántica activada</div>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded-full">ACTIVO</span>
+                </div>
+            </div>
+
+            <!-- Vector DB Search Engine -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+                        <input type="text" id="vector-search-input" placeholder="Búsqueda semántica en repositorio: ej. 'Contratos cloud con Ley 81 de 2019 y SLA > 99.5%'..." class="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none focus:border-yoh-blue">
+                    </div>
+                    <button onclick="handleVectorSearch()" class="px-4 py-2 bg-yoh-navy hover:bg-yoh-blue text-white text-xs font-bold rounded-xl transition-all">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Repository Table & Predictive Alerts -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Repository Table -->
+                <div class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="database" class="w-4 h-4 text-yoh-blue"></i>
+                            <span>Inclusión en la Carpeta Digital del Cliente</span>
+                        </h3>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] border-b border-slate-200 font-bold">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Proveedor</th>
+                                    <th class="p-3">Monto (USD)</th>
+                                    <th class="p-3">Vencimiento</th>
+                                    <th class="p-3">Estado</th>
+                                    <th class="p-3 text-right">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trabajador-repository-tbody" class="divide-y divide-slate-200">
+                                <!-- Dynamic Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Predictive Alerts -->
+                <div class="lg:col-span-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center gap-2 pb-3 border-b border-slate-200">
+                        <i data-lucide="bell-ring" class="w-4 h-4 text-yoh-orange"></i>
+                        <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider">Alertas de Vencimiento</h3>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500">
+                        Hitos de notificación programada: <strong>90, 60, 30, 15, 10, 5 y 1 día</strong>.
+                    </p>
+
+                    <div class="space-y-2 text-xs">
+                        <div class="p-3 rounded-xl bg-orange-50 border border-yoh-orange/30 flex items-start gap-2.5">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-yoh-orange shrink-0 mt-0.5"></i>
+                            <div>
+                                <div class="font-bold text-yoh-navy">Día 12 Restante: CTR-2026-042</div>
+                                <div class="text-[11px] text-slate-600">Consultores de Ciberseguridad Global Corp</div>
+                                <div class="text-[10px] text-yoh-orange font-bold mt-1">Próximo hito: Día 10 (Escalamiento)</div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-blue-50 border border-blue-200 flex items-start gap-2.5">
+                            <i data-lucide="clock" class="w-4 h-4 text-yoh-blue shrink-0 mt-0.5"></i>
+                            <div>
+                                <div class="font-bold text-yoh-navy">Día 353 Restante: CTR-2026-089</div>
+                                <div class="text-[11px] text-slate-600">Servicios Cloud Panamá S.A.</div>
+                                <div class="text-[10px] text-emerald-600 font-bold mt-1">Próximo hito: Día 90</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PESTAÑA 4: AGENTE 4 "SUPERVISOR" (CONTROL TRANSVERSAL ADVERSARIO)   -->
+        <!-- =================================================================== -->
+        <div id="view-supervisor" class="hidden space-y-6 no-print">
+            <!-- Header -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 border-l-4 border-l-emerald-600">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-200">
+                    <i data-lucide="eye" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-yoh-navy">Agente 4: Supervisor (Agente Adversario)</h2>
+                    <p class="text-xs text-slate-500">
+                        Auditoría continua y transversal de todas las fases. Verifica coherencia, detecta alucinaciones e inconsistencias y activa HITL de forma prioritaria.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Status Banner & Metric Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Estado del Agente Adversario</span>
+                    <span class="text-lg font-black text-emerald-600 flex items-center gap-1.5 mt-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        ACTIVO (24/7)
+                    </span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Coherencia Transversal</span>
+                    <span id="sup-metric-coherence" class="text-xl font-black text-yoh-navy mt-1 block">99.8%</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Deriva de Modelo (Drift)</span>
+                    <span id="sup-metric-drift" class="text-xl font-black text-emerald-600 mt-1 block">0.02% (Bajo)</span>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <span class="text-[11px] text-slate-500 block font-medium">Intervenciones HITL Forzadas</span>
+                    <span id="sup-metric-interventions" class="text-xl font-black text-yoh-orange mt-1 block">1 Activa</span>
+                </div>
+            </div>
+
+            <!-- Adversarial Test Interactive Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider flex items-center gap-2">
+                        <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Simulador de Pruebas Adversarias</span>
+                    </h3>
+
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Somete el flujo de los Agentes 1, 2 y 3 a escenarios de estrés para verificar que el <strong>Agente Supervisor</strong> intercepte alucinaciones, contradicciones o vulnerabilidades de compliance.
+                    </p>
+
+                    <div class="space-y-2.5 pt-2">
+                        <button onclick="runAdversarialTest('inconsistency')" class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs transition-all flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-yoh-navy">Prueba 1: Inconsistencia en SLA y Descuento</div>
+                                <div class="text-[11px] text-slate-500">Simula contradicción entre cláusula 2da y contraprestación.</div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                        </button>
+
+                        <button onclick="runAdversarialTest('law81')" class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs transition-all flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-yoh-navy">Prueba 2: Omisión de Consentimiento Ley 81</div>
+                                <div class="text-[11px] text-slate-500">Simula borrador sin cláusula explícita de anonimización ARCO.</div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                        </button>
+
+                        <button onclick="runAdversarialTest('drift')" class="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs transition-all flex items-center justify-between">
+                            <div>
+                                <div class="font-bold text-yoh-navy">Prueba 3: Test de Deriva de Modelo (Drift Test)</div>
+                                <div class="text-[11px] text-slate-500">Evalúa consistencia sintáctica y legal acumulada.</div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Adversarial Real-Time Logs -->
+                <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                            <h3 class="text-xs font-bold text-yoh-navy uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="terminal" class="w-4 h-4 text-yoh-blue"></i>
+                                <span>Logs de Auditoría Transversal en Tiempo Real</span>
+                            </h3>
+                            <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">XAI / RAG Monitor</span>
+                        </div>
+
+                        <div id="sup-log-container" class="bg-slate-900 text-emerald-400 font-mono text-[11px] p-4 rounded-xl max-h-[300px] overflow-y-auto space-y-2 leading-relaxed border border-slate-800">
+                            <div>[SYSTEM - AGENTE 4 SUPERVISOR]: Inicializado en modo adversario continuo sobre red VPC Banco YOH.</div>
+                            <div>[MONITOR]: Verificando coherencia entre Agente 1 (Borradores) y Agente 2 (Normativo SBP/Ley 81)...</div>
+                            <div class="text-emerald-300">[OK]: CTR-2026-089 verificado sin inconsistencias semánticas. Coherencia 100%.</div>
+                            <div class="text-amber-400">[WARN]: CTR-2026-042 detectó restricción parcial en auditoría SBP. HITL activado automáticamente.</div>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-200 flex items-center justify-between">
+                        <span class="text-xs text-slate-500 font-medium">Gobernanza Transversal • Estrategia "Gatear, Caminar, Correr"</span>
+                        <button onclick="openHitlModalFor('CTR-2026-042')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+                            <span>Ver Intervención HITL</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- PESTAÑA 5: DASHBOARD EJECUTIVO                                     -->
+        <!-- =================================================================== -->
+        <div id="view-dashboard" class="hidden space-y-6 no-print">
+            <!-- Banner -->
+            <div class="bg-gradient-to-r from-yoh-navy via-yoh-blue to-yoh-navy text-white p-6 rounded-2xl border-l-4 border-yoh-orange shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h2 class="text-2xl font-bold flex items-center gap-2">
+                        <span>Dashboard Ejecutivo</span>
+                        <i data-lucide="sparkles" class="w-5 h-5 text-yoh-orange"></i>
+                    </h2>
+                    <p class="text-xs text-slate-200 mt-1 max-w-2xl leading-relaxed">
+                        Métricas generales de eficiencia, calidad de procesamiento y estado de la gestión contractual de Banco YOH.
+                    </p>
+                </div>
+                <button onclick="switchTab('contratos')" class="px-4 py-2.5 bg-yoh-orange hover:bg-yoh-orangeHover text-white font-bold rounded-xl text-xs shadow-md transition-all flex items-center gap-2 self-start md:self-auto whitespace-nowrap">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Nuevo Contrato</span>
+                </button>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-t-4 border-t-yoh-blue">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Tiempo de Ciclo</span>
+                        <i data-lucide="clock" class="w-4 h-4 text-yoh-blue"></i>
+                    </div>
+                    <div class="mt-3">
+                        <div class="text-2xl font-black text-yoh-navy">5 Minutos</div>
+                        <div class="text-xs text-emerald-600 font-semibold mt-1">Reducido de 2-3 semanas (Máx 2 días aprobado)</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-t-4 border-t-yoh-orange">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Renovaciones Puntuales</span>
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-yoh-orange"></i>
+                    </div>
+                    <div class="mt-3">
+                        <div class="text-2xl font-black text-yoh-navy">100% Meta</div>
+                        <div class="text-xs text-emerald-600 font-semibold mt-1">Incrementado desde 88% previo</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-t-4 border-t-indigo-600">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Procesamiento Autónomo</span>
+                        <i data-lucide="cpu" class="w-4 h-4 text-indigo-600"></i>
+                    </div>
+                    <div class="mt-3">
+                        <div class="text-2xl font-black text-yoh-navy">80% Estándar</div>
+                        <div class="text-xs text-slate-500 font-medium mt-1">20% gestionado vía HITL</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-t-4 border-t-emerald-600">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-semibold uppercase tracking-wider">Tasa de Alucinación</span>
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                    </div>
+                    <div class="mt-3">
+                        <div class="text-2xl font-black text-emerald-600">0.0% (Cero)</div>
+                        <div class="text-xs text-slate-500 font-medium mt-1">Gobernanza XAI, RAG & Agente 4</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Row: HITL Queue & Agent System Status -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Pending HITL Queue -->
+                <div class="lg:col-span-7 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="user-check" class="w-5 h-5 text-yoh-orange"></i>
+                            <h3 class="text-sm font-bold text-yoh-navy">Revisiones Humanas Pendientes (HITL)</h3>
+                        </div>
+                        <span id="hitl-count-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-yoh-orange border border-yoh-orange/30">
+                            1 Pendiente
+                        </span>
+                    </div>
+
+                    <div id="hitl-queue-list" class="space-y-3">
+                        <!-- Dynamic HITL Item -->
+                    </div>
+                </div>
+
+                <!-- Agent System Status (All 4 Agents) -->
+                <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 class="text-sm font-bold text-yoh-navy pb-3 border-b border-slate-200 flex items-center gap-2">
+                        <i data-lucide="activity" class="w-4 h-4 text-yoh-blue"></i>
+                        <span>Estado de Agentes Autónomos</span>
+                    </h3>
+
+                    <div class="space-y-3 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-blue-100 text-yoh-blue rounded-lg">
+                                    <i data-lucide="file-text" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-yoh-navy">Agente 1: Contratos</div>
+                                    <div class="text-slate-500 text-[11px]">Captura & Borradores</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">ACTIVO</span>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-orange-100 text-yoh-orange rounded-lg">
+                                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-yoh-navy">Agente 2: Analítico</div>
+                                    <div class="text-slate-500 text-[11px]">Riesgo & Cumplimiento</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">ACTIVO</span>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-indigo-100 text-indigo-700 rounded-lg">
+                                    <i data-lucide="cpu" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-yoh-navy">Agente 3: Trabajador</div>
+                                    <div class="text-slate-500 text-[11px]">Firma, Carpeta Digital & Vector DB</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">ACTIVO</span>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-yoh-navy">Agente 4: Supervisor</div>
+                                    <div class="text-slate-500 text-[11px]">Control Adversario Transversal</div>
+                                </div>
+                            </div>
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">ACTIVO (TRANSVERSAL)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER CORPORATIVO BANCO YOH -->
+    <footer class="bg-white border-t border-slate-200 py-4 px-6 mt-auto text-xs text-slate-500 no-print">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
+            <span>© 2026 Banco YOH • Portal de Gestión de Contratos</span>
+            <span class="font-medium text-yoh-blue">Departamento de Administración de Contratos</span>
+        </div>
+    </footer>
+
+    <!-- LOGIC APPLICATION SCRIPT -->
+    <script>
+        // GLOBAL CONTRACT STORE
+        let contractsStore = [
+            {
+                id: 'CTR-2026-089',
+                provider: 'Servicios Cloud Panamá S.A.',
+                ruc: '155698234-2-2018 DV 45',
+                rep: 'Jacinto Pico Cuy',
+                cedula: 'E-8-125489',
+                serviceType: 'Tecnología e Infraestructura Cloud',
+                amount: 55000,
+                termMonths: 12,
+                sla: '99.9%',
+                status: 'Auditado - Conforme',
+                riskScore: 8,
+                clausesAnalyzed: 24,
+                nonCompliantCount: 0,
+                createdDate: '2026-10-12',
+                expirationDate: '2027-10-12',
+                daysToExpiration: 353,
+                isSigned: true,
+                inFolder: true,
+                content: ''
+            },
+            {
+                id: 'CTR-2026-042',
+                provider: 'Consultores de Ciberseguridad Global Corp',
+                ruc: '87941235-1-2021 DV 12',
+                rep: 'Lucrecia Dallos González',
+                cedula: '8-569-86547',
+                serviceType: 'Auditoría de Ciberseguridad & Pentesting',
+                amount: 28000,
+                termMonths: 6,
+                sla: '99.5%',
+                status: 'Requiere HITL (Riesgo Alto)',
+                riskScore: 32,
+                clausesAnalyzed: 18,
+                nonCompliantCount: 2,
+                createdDate: '2026-09-01',
+                expirationDate: '2026-11-05',
+                daysToExpiration: 12,
+                isSigned: false,
+                inFolder: false,
+                content: ''
+            }
+        ];
+
+        let selectedContractIdForAudit = contractsStore[0].id;
+        let activeHitlContract = null;
+
+        // INITIALIZATION
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            // Pre-generate default contract draft for UI preview
+            generateContractHTML('Servicios Cloud Panamá S.A.', '155698234-2-2018 DV 45', 'Jacinto Pico Cuy', 'E-8-125489', '55000', 'Tecnología e Infraestructura Cloud', '12', '99.9%');
+            renderDashboardQueue();
+            renderAnaliticoContractList();
+            renderTrabajadorTable();
+        });
+
+        // TOAST NOTIFICATION FUNCTION
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `px-4 py-3 rounded-xl shadow-xl font-semibold text-xs flex items-center gap-2 border animate-bounce pointer-events-auto transition-all ${
+                type === 'success' 
+                    ? 'bg-emerald-600 text-white border-emerald-400' 
+                    : type === 'warning' 
+                    ? 'bg-yoh-orange text-white border-orange-300' 
+                    : 'bg-yoh-navy text-white border-slate-700'
+            }`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-4 h-4"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3500);
+        }
+
+        // NAVIGATION TAB SWITCHER
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            document.getElementById('view-contratos').classList.add('hidden');
+            document.getElementById('view-analitico').classList.add('hidden');
+            document.getElementById('view-trabajador').classList.add('hidden');
+            document.getElementById('view-supervisor').classList.add('hidden');
+            document.getElementById('view-dashboard').classList.add('hidden');
+
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+        }
+
+        // HELPER TO GENERATE STRUCTURED RICH-HTML DRAFT WITH CENTERED 2-LINE TITLE
+        function generateContractHTML(provider, ruc, rep, cedula, amount, service, term, sla) {
+            const formattedAmount = Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            const today = new Date();
+            const dateStr = `${today.getDate()} de ${today.toLocaleString('es-ES', { month: 'long' })} de ${today.getFullYear()}`;
+
+            const html = `
+                <div style="text-align: center; font-weight: bold; font-size: 13pt; margin-bottom: 4px; text-transform: uppercase; color: #0F172A; line-height: 1.3;">
+                    CONTRATO DE PROVISIÓN DE SERVICIOS Y SUMINISTRO
+                </div>
+                <div style="text-align: center; font-weight: bold; font-size: 12pt; margin-bottom: 22px; text-transform: uppercase; color: #0F172A; line-height: 1.3;">
+                    BANCO YOH, S.A.
+                </div>
+
+                <div style="margin-bottom: 14px; text-align: justify; line-height: 1.6;">
+                    Los suscritos, a saber: Por una parte, <strong>BANCO YOH, S.A.</strong>, institución bancaria constituida conforme a las leyes de la República de Panamá, inscrita en la Ficha 8890, Documento 12345 del Registro Público de Panamá, con RUC 8-NT-1234, con domicilio en Torre Banco YOH, Calle 50, Ciudad de Panamá, representada en este acto por su Representante Legal de Administración Contractual, en adelante denominada <strong>EL BANCO</strong>; y por la otra parte, la empresa <strong>${provider}</strong>, con RUC <strong>${ruc}</strong>, representada por el señor(a) <strong>${rep}</strong>, mayor de edad, con cédula de identidad personal N° <strong>${cedula}</strong>, en adelante denominada <strong>EL PROVEEDOR</strong>, han acordado celebrar el presente contrato sujeto a las siguientes cláusulas:
+                </div>
+
+                <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">PRIMERA: Objeto del Contrato.</strong> El presente contrato tiene por objeto la provisión periódica y continua de servicios y suministros de <strong>${service}</strong> a favor de <strong>EL BANCO</strong>, garantizando un Nivel de Servicio (SLA) mínimo de <strong>${sla}</strong>.
+                </div>
+
+                <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">SEGUNDA: Obligaciones del Proveedor.</strong> Constituyen obligaciones a cargo de <strong>EL PROVEEDOR</strong>: 
+                    <br>1. Suministrar a <strong>EL BANCO</strong> los bienes y servicios acordados cumpliendo con la disponibilidad garantizada del <strong>${sla}</strong>.
+                    <br>2. Conceder a <strong>EL BANCO</strong> un descuento del diez por ciento (10%) por pronto pago dentro de los primeros quince (15) días de facturación.
+                    <br>3. Permitir las auditorías de riesgo tecnológico exigidas por el Acuerdo No. 008-2010 de la Superintendencia de Bancos de Panamá (SBP).
+                    <br>4. Capacitar al personal designado de <strong>EL BANCO</strong> mediante instructivos técnicos y sesiones de inducción.
+                    <br>5. Asumir el costo de empaques, licencias, fletes y seguros de despacho correspondientes a los productos suministrados.
+                </div>
+
+                <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">TERCERA: Obligaciones de BANCO YOH.</strong> Constituyen obligaciones a cargo de <strong>EL BANCO</strong>:
+                    <br>1. Adquirir y validar los productos y servicios suministrados por <strong>EL PROVEEDOR</strong>.
+                    <br>2. Pagar de contado las facturas comerciales aprobadas dentro del término estipulado de treinta (30) días calendario.
+                </div>
+
+                <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">CUARTA: Contraprestación y Forma de Pago.</strong> Se fija la cuantía total del presente contrato en la suma de <strong>$${formattedAmount} USD</strong> (Dólares de los Estados Unidos de América) por un período de vigencia de <strong>${term} meses</strong>.
+                </div>
+
+                <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">QUINTA: Cumplimiento Regulatorio y Protección de Datos.</strong> Las partes convienen que el tratamiento de la información se sujetará strictly a la <strong>Ley 81 de 2019</strong> de Panamá sobre Protección de Datos Personales, aplicando técnicas de anonimización y respeto a los derechos ARCO, así como las directrices AML de la <strong>Ley 23 de 2015</strong>.
+                </div>
+
+                <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">SEXTA: Confidencialidad y Seguridad.</strong> <strong>EL PROVEEDOR</strong> mantendrá absoluta reserva de la información confidencial a la que tenga acceso con motivo de la ejecución de este acuerdo.
+                </div>
+
+                <div style="margin-bottom: 12px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">SÉPTIMA: Vigencia, Mantenimiento y Renovación.</strong> El contrato tendrá una vigencia de <strong>${term} meses</strong> a partir de su firma. <strong>EL BANCO</strong> podrá renovar previo acuerdo escrito antes del vencimiento.
+                </div>
+
+                <div style="margin-bottom: 24px; text-align: justify; line-height: 1.6;">
+                    <strong style="font-weight: bold; color: #0F172A;">OCTAVA: Jurisdicción y Ley Aplicable.</strong> El presente acuerdo se rige por las leyes de la República de Panamá.
+                </div>
+
+                <div style="margin-bottom: 32px; text-align: justify; line-height: 1.6;">
+                    En fe de lo cual, se firma el presente documento a los ${dateStr} en la Ciudad de Panamá.
+                </div>
+
+                <!-- SIGNATURE SECTION - CENTERED UNDERNEATH LINES -->
+                <div style="margin-top: 50px; width: 100%; display: flex; justify-content: space-between; align-items: flex-start; page-break-inside: avoid;">
+                    <div style="width: 45%; text-align: center;">
+                        <div style="width: 85%; margin: 0 auto; border-bottom: 1px solid #000000; height: 40px;"></div>
+                        <div style="margin-top: 8px; font-weight: bold; text-align: center; color: #0F172A;">POR BANCO YOH, S.A.</div>
+                        <div style="text-align: center; font-size: 10pt; color: #334155;">EL BANCO</div>
+                        <div style="text-align: center; font-size: 10pt; color: #334155;">Representante de Administración</div>
+                        <div style="text-align: center; font-size: 10pt; color: #334155;">RUC: 8-NT-1234</div>
+                    </div>
+
+                    <div style="width: 45%; text-align: center;">
+                        <div style="width: 85%; margin: 0 auto; border-bottom: 1px solid #000000; height: 40px;"></div>
+                        <div style="margin-top: 8px; font-weight: bold; text-align: center; color: #0F172A;">POR EL PROVEEDOR</div>
+                        <div style="text-align: center; font-size: 10pt; color: #334155;">${provider}</div>
+                        <div style="text-align: center; font-size: 10pt; color: #334155;">Rep.: ${rep}</div>
+                        <div style="text-align: center; font-size: 10pt; color: #334155;">Cédula / ID: ${cedula}</div>
+                        <div style="text-align: center; font-size: 10pt; color: #334155;">RUC: ${ruc}</div>
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // RENDER DASHBOARD QUEUE
+        function renderDashboardQueue() {
+            const list = document.getElementById('hitl-queue-list');
+            const badge = document.getElementById('hitl-count-badge');
+            const pendingList = contractsStore.filter(c => c.riskScore > 20 || c.status.includes('HITL'));
+
+            badge.innerText = `${pendingList.length} Pendiente${pendingList.length !== 1 ? 's' : ''}`;
+
+            if (pendingList.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-xs">
+                        <i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-60"></i>
+                        No existen casos pendientes de revisión humana.
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            list.innerHTML = pendingList.map(c => `
+                <div class="p-3.5 bg-slate-50 rounded-xl border border-yoh-orange/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-xs font-bold text-yoh-orange">${c.id}</span>
+                            <span class="text-xs font-bold text-yoh-navy">${c.provider}</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">${c.serviceType} • $${c.amount.toLocaleString()} USD</div>
+                        <div class="text-[11px] text-rose-600 font-semibold mt-1">Risk Score: ${c.riskScore}% (${c.nonCompliantCount} observaciones)</div>
+                    </div>
+                    <button onclick="openHitlModalFor('${c.id}')" class="px-3.5 py-1.5 bg-yoh-orange hover:bg-yoh-orangeHover text-white text-xs font-bold rounded-lg transition-all shadow-sm self-start sm:self-auto">
+                        Evaluar HITL
+                    </button>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // AGENTE 1: CONTRATOS GENERATION
+        function handleGenerateDraft(e) {
+            e.preventDefault();
+            const provider = document.getElementById('input-provider').value;
+            const ruc = document.getElementById('input-ruc').value;
+            const rep = document.getElementById('input-rep').value;
+            const cedula = document.getElementById('input-cedula').value;
+            const amount = document.getElementById('input-amount').value;
+            const service = document.getElementById('input-service').value;
+            const term = document.getElementById('input-term').value;
+            const sla = document.getElementById('input-sla').value;
+
+            const draftHTML = generateContractHTML(provider, ruc, rep, cedula, amount, service, term, sla);
+
+            document.getElementById('printable-contract-area').innerHTML = draftHTML;
+            document.getElementById('btn-transfer-analitico').disabled = false;
+            document.getElementById('btn-transfer-analitico').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            showToast('Borrador legal autogenerado', 'success');
+        }
+
+        function copyDraftText() {
+            const container = document.getElementById('printable-contract-area');
+            const text = container.innerText;
+            navigator.clipboard.writeText(text);
+            showToast('Texto del contrato copiado al portapapeles', 'info');
+        }
+
+        // COMPLETE PDF GENERATION WITH HTML2PDF (PREVENTING TRUNCATION)
+        function downloadContractPDF() {
+            const previewContainer = document.getElementById('printable-contract-area');
+            const providerName = document.getElementById('input-provider').value || 'Proveedor';
+
+            if (!previewContainer || previewContainer.innerText.includes('Completa el formulario')) {
+                showToast('Primero genera un borrador de contrato para descargar en PDF', 'warning');
+                return;
+            }
+
+            showToast('Preparando y descargando PDF completo...', 'info');
+
+            // Create an unconstrained temporary container to avoid scroll/height clipping
+            const printElement = document.createElement('div');
+            printElement.innerHTML = previewContainer.innerHTML;
+            printElement.style.padding = '30px';
+            printElement.style.fontFamily = "'Times New Roman', Times, serif";
+            printElement.style.fontSize = '11pt';
+            printElement.style.lineHeight = '1.6';
+            printElement.style.color = '#000000';
+            printElement.style.backgroundColor = '#ffffff';
+            printElement.style.width = '750px';
+            printElement.style.margin = '0 auto';
+
+            // Configure html2pdf with pagebreak settings to prevent truncation
+            const opt = {
+                margin:       [12, 12, 12, 12],
+                filename:     `Contrato_Banco_YOH_${providerName.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            if (window.html2pdf) {
+                html2pdf().set(opt).from(printElement).save().then(() => {
+                    showToast('PDF completo descargado en tu equipo', 'success');
+                }).catch(err => {
+                    console.error('Error al generar PDF con html2pdf:', err);
+                    window.print();
+                });
+            } else {
+                window.print();
+            }
+        }
+
+        function sendToAnalitico() {
+            const provider = document.getElementById('input-provider').value;
+            const ruc = document.getElementById('input-ruc').value;
+            const rep = document.getElementById('input-rep').value;
+            const cedula = document.getElementById('input-cedula').value;
+            const amount = Number(document.getElementById('input-amount').value);
+            const service = document.getElementById('input-service').value;
+            const term = document.getElementById('input-term').value;
+            const sla = document.getElementById('input-sla').value;
+            const contentHTML = document.getElementById('printable-contract-area').innerHTML;
+
+            const newId = `CTR-2026-0${Math.floor(100 + Math.random() * 900)}`;
+            const newObj = {
+                id: newId,
+                provider: provider,
+                ruc: ruc,
+                rep: rep,
+                cedula: cedula,
+                serviceType: service,
+                amount: amount,
+                termMonths: Number(term),
+                sla: sla,
+                status: 'Pendiente de Escaneo',
+                riskScore: 0,
+                clausesAnalyzed: 0,
+                nonCompliantCount: 0,
+                createdDate: new Date().toISOString().split('T')[0],
+                expirationDate: '2027-10-24',
+                daysToExpiration: 365,
+                isSigned: false,
+                inFolder: false,
+                content: contentHTML
+            };
+
+            contractsStore.unshift(newObj);
+            selectedContractIdForAudit = newId;
+
+            renderDashboardQueue();
+            renderAnaliticoContractList();
+            renderTrabajadorTable();
+
+            switchTab('analitico');
+            showToast(`Contrato ${newId} enviado a Agente Analítico`, 'success');
+        }
+
+        // AGENTE 2: ANALÍTICO
+        function renderAnaliticoContractList() {
+            const container = document.getElementById('analitico-contract-list');
+            container.innerHTML = contractsStore.map(c => `
+                <div onclick="selectContractForAudit('${c.id}')" class="p-3 rounded-xl border cursor-pointer transition-all ${
+                    selectedContractIdForAudit === c.id 
+                        ? 'bg-orange-50/60 border-yoh-orange' 
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                }">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono text-xs font-bold text-yoh-navy">${c.id}</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${c.riskScore > 20 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${c.status}</span>
+                    </div>
+                    <div class="text-xs font-bold text-slate-800 mt-1">${c.provider}</div>
+                    <div class="text-[11px] text-slate-500">$${c.amount.toLocaleString()} USD</div>
+                </div>
+            `).join('');
+        }
+
+        function selectContractForAudit(id) {
+            selectedContractIdForAudit = id;
+            renderAnaliticoContractList();
+            
+            const item = contractsStore.find(c => c.id === id);
+            if (item && item.clausesAnalyzed > 0) {
+                updateAuditMetricsUI(item.riskScore, item.clausesAnalyzed, item.nonCompliantCount);
+            } else {
+                updateAuditMetricsUI('--', '--', '--');
+            }
+        }
+
+        function runAuditSimulation() {
+            const container = document.getElementById('audit-progress-container');
+            const bar = document.getElementById('audit-progress-bar');
+            const text = document.getElementById('audit-progress-text');
+
+            container.classList.remove('hidden');
+            let progress = 0;
+
+            const interval = setInterval(() => {
+                progress += 25;
+                bar.style.width = `${progress}%`;
+                text.innerText = `${progress}%`;
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        container.classList.add('hidden');
+                        finishAuditSimulation();
+                    }, 300);
+                }
+            }, 250);
+        }
+
+        function finishAuditSimulation() {
+            const contract = contractsStore.find(c => c.id === selectedContractIdForAudit);
+            if (!contract) return;
+
+            const calculatedRisk = Math.floor(Math.random() * 30) + 5;
+            const issues = calculatedRisk > 20 ? 2 : 0;
+            const newStatus = calculatedRisk > 20 ? 'Requiere HITL (Riesgo Alto)' : 'Auditado - Conforme';
+
+            contract.riskScore = calculatedRisk;
+            contract.clausesAnalyzed = 24;
+            contract.nonCompliantCount = issues;
+            contract.status = newStatus;
+
+            updateAuditMetricsUI(calculatedRisk, 24, issues);
+            renderAnaliticoContractList();
+            renderDashboardQueue();
+
+            showToast(`Análisis completado para ${contract.id}`, 'success');
+        }
+
+        function updateAuditMetricsUI(risk, clauses, issues) {
+            document.getElementById('metric-risk-score').innerText = risk !== '--' ? `${risk}%` : '-- %';
+            document.getElementById('metric-clauses').innerText = clauses;
+            document.getElementById('metric-issues').innerText = issues;
+
+            const badge81 = document.getElementById('badge-law81');
+            const badge008 = document.getElementById('badge-sbp008');
+            const badge23 = document.getElementById('badge-law23');
+            const hitlBtn = document.getElementById('btn-hitl-trigger');
+            const recText = document.getElementById('audit-recommendation-text');
+
+            if (risk === '--') {
+                badge81.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600';
+                badge81.innerText = 'PENDIENTE';
+                badge008.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600';
+                badge008.innerText = 'PENDIENTE';
+                badge23.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600';
+                badge23.innerText = 'PENDIENTE';
+                hitlBtn.classList.add('hidden');
+                recText.innerText = 'Haz clic en "Ejecutar Análisis de Riesgo".';
+                return;
+            }
+
+            if (risk > 20) {
+                badge81.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700';
+                badge81.innerText = 'CONFORME';
+                badge008.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700';
+                badge008.innerText = 'ALERTA DETECTADA';
+                badge23.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700';
+                badge23.innerText = 'CONFORME';
+
+                hitlBtn.classList.remove('hidden');
+                recText.innerText = 'Alerta: Risk score supera el umbral del 20%. Se sugiere revisión HITL.';
+            } else {
+                badge81.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700';
+                badge81.innerText = 'CONFORME';
+                badge008.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700';
+                badge008.innerText = 'CONFORME';
+                badge23.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700';
+                badge23.innerText = 'CONFORME';
+
+                hitlBtn.classList.add('hidden');
+                recText.innerText = 'Contrato 100% conforme con las políticas de Banco YOH.';
+            }
+        }
+
+        function triggerHitlFromAnalitico() {
+            openHitlModalFor(selectedContractIdForAudit);
+        }
+
+        // AGENTE 3: TRABAJADOR
+        function renderTrabajadorTable() {
+            const tbody = document.getElementById('trabajador-repository-tbody');
+            tbody.innerHTML = contractsStore.map(c => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 font-mono font-bold text-yoh-navy">${c.id}</td>
+                    <td class="p-3 font-semibold text-slate-800">${c.provider}</td>
+                    <td class="p-3 font-bold">$${c.amount.toLocaleString()}</td>
+                    <td class="p-3">${c.expirationDate}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${c.isSigned ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-yoh-orange'}">
+                            ${c.isSigned ? 'Firmado & Archivado' : 'Pendiente Firma'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="simulateDigitalSignatureFor('${c.id}')" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-yoh-blue border border-blue-200 rounded font-bold text-[11px] transition-all">
+                            Ejecutar Firma
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function simulateDigitalSignature() {
+            showToast('Firma Digital Avanzada ejecutada', 'success');
+        }
+
+        function simulateDigitalSignatureFor(id) {
+            const item = contractsStore.find(c => c.id === id);
+            if (item) {
+                item.isSigned = true;
+                item.inFolder = true;
+                renderTrabajadorTable();
+                showToast(`Firma digital generada para ${id}. Incluido en Carpeta Digital del Cliente.`, 'success');
+            }
+        }
+
+        function simulateCustomerFolder() {
+            showToast('Expediente guardado en Carpeta Digital del Cliente', 'info');
+        }
+
+        function handleVectorSearch() {
+            const query = document.getElementById('vector-search-input').value.toLowerCase();
+            if (!query) {
+                renderTrabajadorTable();
+                return;
+            }
+
+            const filtered = contractsStore.filter(c => 
+                c.provider.toLowerCase().includes(query) ||
+                c.serviceType.toLowerCase().includes(query)
+            );
+
+            const tbody = document.getElementById('trabajador-repository-tbody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No se encontraron coincidencia semánticas.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(c => `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-3 font-mono font-bold text-yoh-navy">${c.id}</td>
+                    <td class="p-3 font-semibold text-slate-800">${c.provider}</td>
+                    <td class="p-3 font-bold">$${c.amount.toLocaleString()}</td>
+                    <td class="p-3">${c.expirationDate}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${c.isSigned ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-yoh-orange'}">
+                            ${c.isSigned ? 'Firmado & Archivado' : 'Pendiente Firma'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="simulateDigitalSignatureFor('${c.id}')" class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-yoh-blue border border-blue-200 rounded font-bold text-[11px] transition-all">
+                            Ejecutar Firma
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            showToast(`Búsqueda en Vector DB: ${filtered.length} resultados`, 'info');
+        }
+
+        // AGENTE 4: SUPERVISOR ADVERSARIAL SIMULATION LOGIC
+        function runAdversarialTest(type) {
+            const logContainer = document.getElementById('sup-log-container');
+            const timestamp = new Date().toLocaleTimeString('es-ES');
+
+            if (type === 'inconsistency') {
+                logContainer.innerHTML += `
+                    <div class="text-rose-400 mt-1">[${timestamp}] [ADVERSARIAL TEST]: Simulando contradicción entre SLA e incentivo por pronto pago...</div>
+                    <div class="text-amber-300">[SUPERVISOR DETECT]: Detectada incongruencia en Cláusula 2da vs 4ta. Coherencia cae a 84.2%.</div>
+                    <div class="text-rose-400 font-bold">[ACTION REQUIRED]: Disparando revisión HITL obligatoria antes de autorizar firma digital.</div>
+                `;
+                showToast('Agente 4 interceptó inconsistencia contractual', 'warning');
+            } else if (type === 'law81') {
+                logContainer.innerHTML += `
+                    <div class="text-rose-400 mt-1">[${timestamp}] [ADVERSARIAL TEST]: Escaneando omisión de derechos ARCO Ley 81...</div>
+                    <div class="text-amber-300">[SUPERVISOR DETECT]: Alerta de alucinación o vacante normativa en Cláusula Quinta.</div>
+                    <div class="text-emerald-300">[RESOLVED]: Aplicado parche dinámico RAG. Bloqueada exportación sin consentimiento expreso.</div>
+                `;
+                showToast('Agente 4 validó y corrigió omisión de Ley 81', 'success');
+            } else if (type === 'drift') {
+                logContainer.innerHTML += `
+                    <div class="text-emerald-400 mt-1">[${timestamp}] [DRIFT TEST]: Ejecutando prueba de deriva sintáctica sobre 24 cláusulas...</div>
+                    <div class="text-emerald-300">[SUPERVISOR RESULT]: Deriva de modelo = 0.018%. Modelo estable dentro de umbrales seguros.</div>
+                `;
+                showToast('Prueba de Deriva completada: Modelo Estable', 'info');
+            }
+
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // HITL MODAL LOGIC
+        function openHitlModalFor(id) {
+            const item = contractsStore.find(c => c.id === id);
+            if (!item) return;
+
+            activeHitlContract = item;
+            const modal = document.getElementById('hitl-modal');
+            const body = document.getElementById('hitl-modal-body');
+
+            const contentPreview = item.content || generateContractHTML(item.provider, item.ruc, item.rep || 'Representante', item.cedula || 'E-8-00000', item.amount, item.serviceType, item.termMonths, item.sla);
+
+            body.innerHTML = `
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between">
+                    <div>
+                        <span class="text-slate-500 block">ID Contrato:</span>
+                        <span class="font-mono font-bold text-yoh-orange text-sm">${item.id}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Proveedor:</span>
+                        <span class="font-bold text-yoh-navy text-sm">${item.provider}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Risk Score:</span>
+                        <span class="font-bold text-rose-600 text-sm">${item.riskScore}%</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
+                    <span class="font-bold text-rose-800 block">Informe del Agente Analítico y Supervisor:</span>
+                    <p class="text-rose-700 text-[11px]">
+                        El riesgo excede el umbral del 20%. Se detectó restricción parcial de acceso a auditores SBP y posible transferencia de datos sin anonimización previa. Interceptado por Agente 4 (Supervisor).
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 p-3 border border-slate-200 rounded-xl font-serif text-[11px] text-slate-800 max-h-36 overflow-y-auto">
+                    ${contentPreview}
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeHitlModal() {
+            const modal = document.getElementById('hitl-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            activeHitlContract = null;
+        }
+
+        function approveHitl() {
+            if (activeHitlContract) {
+                activeHitlContract.status = 'Aprobado vía HITL';
+                activeHitlContract.riskScore = 10;
+                renderDashboardQueue();
+                renderAnaliticoContractList();
+                renderTrabajadorTable();
+                showToast(`Excepción aprobada para ${activeHitlContract.id}`, 'success');
+            }
+            closeHitlModal();
+        }
+
+        function rejectHitl() {
+            if (activeHitlContract) {
+                activeHitlContract.status = 'Rechazado';
+                renderDashboardQueue();
+                renderAnaliticoContractList();
+                renderTrabajadorTable();
+                showToast(`Contrato ${activeHitlContract.id} rechazado`, 'warning');
+            }
+            closeHitlModal();
+        }
+    </script>
+</body>
+</html>
